@@ -11,6 +11,7 @@ import com.portofolio.wallet.repository.TransactionRepository;
 import com.portofolio.wallet.repository.UserRepository;
 import com.portofolio.wallet.repository.WalletRepository;
 import com.portofolio.wallet.service.WalletService;
+import jakarta.transaction.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +45,7 @@ public class WalletServiceImpl implements WalletService {
         return response;
     }
     @Override
+    @Transactional
     public DepositResponse deposit(DepositRequest request){
         String email = (String) SecurityContextHolder
                 .getContext()
