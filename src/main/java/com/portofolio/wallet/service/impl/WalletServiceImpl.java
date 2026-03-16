@@ -15,7 +15,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class WalletServiceImpl implements WalletService {
@@ -56,6 +58,17 @@ public class WalletServiceImpl implements WalletService {
         }
         wallet.setBalance(wallet.getBalance().add(request.getAmount()));
         walletRepository.save(wallet);
+
+        Transaction transaction = new Transaction();
+        transaction.setWallet(wallet);
+        transaction.setAmount(request.getAmount());
+        transaction.setType("DEPOSIT");
+        transaction.setReferenceId(UUID.randomUUID().toString());
+        transaction.setDescription("Wallet Deposit");
+        transaction.setCreatedAt(LocalDateTime.now());
+
+        transactionRepository.save(transaction);
+
         DepositResponse response = new DepositResponse();
         response.setBalance(wallet.getBalance());
         return response;
@@ -79,4 +92,5 @@ public class WalletServiceImpl implements WalletService {
             return response;
         }).toList();
     }
+
 }
