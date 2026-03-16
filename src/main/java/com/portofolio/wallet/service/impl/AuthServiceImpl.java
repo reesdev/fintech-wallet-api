@@ -6,6 +6,10 @@ import com.portofolio.wallet.repository.UserRepository;
 import com.portofolio.wallet.repository.WalletRepository;
 import com.portofolio.wallet.service.AuthService;
 import org.springframework.stereotype.Service;
+import com.portofolio.wallet.entity.User;
+import com.portofolio.wallet.entity.Wallet;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -20,7 +24,30 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserResponse register(RegisterRequest request){
-        return null;
+        if (userRepository.existsByEmail((request.getEmail()))){
+            throw new RuntimeException("Email Already Registered");
+        }
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .fullName(request.getFullName())
+                .status("ACTIVE")
+                .createdAt(LocalDateTime.now())
+                .build();
+        userRepository.save(user);
+
+        Wallet wallet = Wallet.builder()
+                .user(user)
+                .balance(BigDecimal.ZERO)
+                .createdAt(LocalDateTime.now())
+                .build();
+        walletRepository.save(wallet);
+
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setStatus(user.getStatus());
+        return response;
     }
 
 }
