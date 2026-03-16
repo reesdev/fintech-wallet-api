@@ -5,6 +5,7 @@ import com.portofolio.wallet.dto.response.UserResponse;
 import com.portofolio.wallet.repository.UserRepository;
 import com.portofolio.wallet.repository.WalletRepository;
 import com.portofolio.wallet.service.AuthService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.portofolio.wallet.entity.User;
 import com.portofolio.wallet.entity.Wallet;
@@ -15,11 +16,13 @@ import java.time.LocalDateTime;
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthServiceImpl(UserRepository userRepository,
-                           WalletRepository walletRepository){
+                           WalletRepository walletRepository, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -29,7 +32,7 @@ public class AuthServiceImpl implements AuthService {
         }
         User user = User.builder()
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .status("ACTIVE")
                 .createdAt(LocalDateTime.now())
