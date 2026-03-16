@@ -1,9 +1,12 @@
 package com.portofolio.wallet.service.impl;
 
+import com.portofolio.wallet.dto.request.LoginRequest;
 import com.portofolio.wallet.dto.request.RegisterRequest;
+import com.portofolio.wallet.dto.response.LoginResponse;
 import com.portofolio.wallet.dto.response.UserResponse;
 import com.portofolio.wallet.repository.UserRepository;
 import com.portofolio.wallet.repository.WalletRepository;
+import com.portofolio.wallet.security.JwtService;
 import com.portofolio.wallet.service.AuthService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,12 +20,15 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthServiceImpl(UserRepository userRepository,
-                           WalletRepository walletRepository, PasswordEncoder passwordEncoder){
+                           WalletRepository walletRepository, PasswordEncoder passwordEncoder,
+                           JwtService jwtService){
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -52,6 +58,19 @@ public class AuthServiceImpl implements AuthService {
         response.setFullName(user.getFullName());
         response.setStatus(user.getStatus());
         return response;
+    }
+
+    @Override
+    public LoginResponse login(LoginRequest request){
+        User user = userRepository.findByEmail((request.getEmail()))
+                .orElseThrow(() -> new RuntimeException("User Not Found"));
+        if (!passwordEncoder.matches(request.getPassword(),user.getPassword())){
+            throw new RuntimeException("Invalid Password");
+        }
+        String token = jwtService.generateToken(user.getEmail());
+        LoginResponse response = new LoginResponse();
+        response.setAccessToken(token);
+        return  response;
     }
 
 }
