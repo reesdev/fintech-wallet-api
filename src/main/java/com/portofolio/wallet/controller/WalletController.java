@@ -5,6 +5,7 @@ import com.portofolio.wallet.dto.request.LoginRequest;
 import com.portofolio.wallet.dto.request.TransferRequest;
 import com.portofolio.wallet.dto.response.*;
 import com.portofolio.wallet.service.WalletService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,7 +58,7 @@ public class WalletController {
     }
 
     @PostMapping("/deposit")
-    public CommonResponse<DepositResponse> login(@RequestBody DepositRequest request){
+    public CommonResponse<DepositResponse> login(@Valid @RequestBody DepositRequest request){
         DepositResponse data = walletService.deposit(request);
         return CommonResponse.<DepositResponse>builder()
                 .timestamp(LocalDateTime.now())
@@ -68,7 +69,7 @@ public class WalletController {
                 .build();
     }
     @PostMapping("/transfer")
-    public CommonResponse<TransferResponse> login(@RequestBody TransferRequest request){
+    public CommonResponse<TransferResponse> login(@Valid @RequestBody TransferRequest request){
         TransferResponse data = walletService.transfer(request);
         return CommonResponse.<TransferResponse>builder()
                 .timestamp(LocalDateTime.now())

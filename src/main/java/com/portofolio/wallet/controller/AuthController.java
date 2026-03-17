@@ -6,6 +6,7 @@ import com.portofolio.wallet.dto.response.CommonResponse;
 import com.portofolio.wallet.dto.response.LoginResponse;
 import com.portofolio.wallet.dto.response.UserResponse;
 import com.portofolio.wallet.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public CommonResponse<UserResponse> login(@RequestBody RegisterRequest request){
+    public CommonResponse<UserResponse> login(@Valid @RequestBody RegisterRequest request){
         UserResponse data = authService.register(request);
         return CommonResponse.<UserResponse>builder()
                 .timestamp(LocalDateTime.now())
@@ -33,7 +34,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public CommonResponse<LoginResponse> login(@RequestBody LoginRequest request){
+    public CommonResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request){
         LoginResponse data = authService.login(request);
 
         return CommonResponse.<LoginResponse>builder()

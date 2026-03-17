@@ -144,7 +144,7 @@ public class WalletServiceImpl implements WalletService {
                 .orElseThrow(UserNotFoundException::new);
 
         if (sender.getId().equals(receiver.getId())) {
-            throw new InvalidAmountException(); // or custom if you want later
+            throw new InvalidTransferException("Cannot transfer to yourself");
         }
 
         Wallet senderWallet = walletRepository.findByUser(sender)
@@ -152,10 +152,6 @@ public class WalletServiceImpl implements WalletService {
 
         Wallet receiverWallet = walletRepository.findByUser(receiver)
                 .orElseThrow(WalletNotFoundException::new);
-
-        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException();
-        }
 
         if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
             throw new InsufficientBalanceException();
