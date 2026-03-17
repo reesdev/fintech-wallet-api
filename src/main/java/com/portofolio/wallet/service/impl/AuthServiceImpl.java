@@ -4,6 +4,9 @@ import com.portofolio.wallet.dto.request.LoginRequest;
 import com.portofolio.wallet.dto.request.RegisterRequest;
 import com.portofolio.wallet.dto.response.LoginResponse;
 import com.portofolio.wallet.dto.response.UserResponse;
+import com.portofolio.wallet.exception.EmailAlreadyRegisteredException;
+import com.portofolio.wallet.exception.InvalidPasswordException;
+import com.portofolio.wallet.exception.UserNotFoundException;
 import com.portofolio.wallet.repository.UserRepository;
 import com.portofolio.wallet.repository.WalletRepository;
 import com.portofolio.wallet.security.JwtService;
@@ -34,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserResponse register(RegisterRequest request){
         if (userRepository.existsByEmail((request.getEmail()))){
-            throw new RuntimeException("Email Already Registered");
+            throw new EmailAlreadyRegisteredException();
         }
         User user = User.builder()
                 .email(request.getEmail())
@@ -63,9 +66,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponse login(LoginRequest request){
         User user = userRepository.findByEmail((request.getEmail()))
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new UserNotFoundException());
         if (!passwordEncoder.matches(request.getPassword(),user.getPassword())){
-            throw new RuntimeException("Invalid Password");
+            throw new InvalidPasswordException();
         }
         String token = jwtService.generateToken(user.getEmail());
         LoginResponse response = new LoginResponse();
