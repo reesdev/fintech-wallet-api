@@ -1,8 +1,10 @@
 package com.portofolio.wallet.controller;
 
 import com.portofolio.wallet.dto.request.DepositRequest;
+import com.portofolio.wallet.dto.request.TransferRequest;
 import com.portofolio.wallet.dto.response.DepositResponse;
 import com.portofolio.wallet.dto.response.TransactionResponse;
+import com.portofolio.wallet.dto.response.TransferResponse;
 import com.portofolio.wallet.dto.response.WalletResponse;
 import com.portofolio.wallet.service.WalletService;
 import org.springframework.web.bind.annotation.*;
@@ -27,5 +29,10 @@ public class WalletController {
     @GetMapping("/transactions")
     public List<TransactionResponse> getTransactions(){
         return walletService.getMyTransactions();
+    }
+    @PostMapping("/transfer")
+    public TransferResponse transfer(@RequestBody TransferRequest request){
+        System.out.println("HIT TRANSFER");
+        return walletService.transfer((request));
     }
 }

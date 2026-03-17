@@ -1,8 +1,10 @@
 package com.portofolio.wallet.service.impl;
 
 import com.portofolio.wallet.dto.request.DepositRequest;
+import com.portofolio.wallet.dto.request.TransferRequest;
 import com.portofolio.wallet.dto.response.DepositResponse;
 import com.portofolio.wallet.dto.response.TransactionResponse;
+import com.portofolio.wallet.dto.response.TransferResponse;
 import com.portofolio.wallet.dto.response.WalletResponse;
 import com.portofolio.wallet.entity.Transaction;
 import com.portofolio.wallet.entity.User;
@@ -93,6 +95,64 @@ public class WalletServiceImpl implements WalletService {
             response.setCreatedAt(tx.getCreatedAt());
             return response;
         }).toList();
+    }
+
+    @Override
+    @Transactional
+    public TransferResponse transfer(TransferRequest request){
+        String email = (String) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+        User sender = userRepository.findByEmail(email)
+                .orElseThrow(()-> new RuntimeException("Sender not found"));
+        User receiver = userRepository.findById(request.getReceiverId())
+                .orElseThrow(()-> new RuntimeException("Receiver not found"));
+
+        if (sender.getId().equals(receiver.getId())) {
+            throw new RuntimeException("Cannot transfer to yourself");
+        }
+
+        Wallet senderWallet = walletRepository.findByUser(sender)
+                .orElseThrow(()-> new RuntimeException("Sender wallet not found"));
+        Wallet receiverWallet = walletRepository.findByUser(receiver)
+                .orElseThrow(()-> new RuntimeException("Receiver wallet not found"));
+        if(request.getAmount().compareTo(BigDecimal.ZERO) <=0){
+            throw new RuntimeException("Amount must be greater than Zero ");
+        }
+        if(senderWallet.getBalance().compareTo(request.getAmount()) <0 ){
+            throw new RuntimeException("Insufficient balance");
+        }
+        senderWallet.setBalance(senderWallet.getBalance().subtract(request.getAmount()));
+        receiverWallet.setBalance(receiverWallet.getBalance().add(request.getAmount()));
+
+        walletRepository.save(senderWallet);
+        walletRepository.save(receiverWallet);
+
+        Transaction senderTx = new Transaction();
+        senderTx.setWallet(senderWallet);
+        senderTx.setAmount(request.getAmount());
+        senderTx.setType("TRANSFER OUT");
+        senderTx.setReferenceId(request.getReferenceId());
+        senderTx.setCreatedAt(LocalDateTime.now());
+
+        Transaction receiverTx = new Transaction();
+        receiverTx.setWallet(receiverWallet);
+        receiverTx.setAmount(request.getAmount());
+        receiverTx.setType("TRANSFER IN");
+        receiverTx.setReferenceId(request.getReferenceId());
+        receiverTx.setCreatedAt(LocalDateTime.now());
+
+        transactionRepository.save(senderTx);
+        transactionRepository.save(receiverTx);
+
+        TransferResponse response = new TransferResponse();
+        response.setBalance(senderWallet.getBalance());
+
+        return response;
+
+
+
     }
 
 }
