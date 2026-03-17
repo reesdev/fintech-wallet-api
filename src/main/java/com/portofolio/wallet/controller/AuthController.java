@@ -22,7 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public CommonResponse<UserResponse> login(@Valid @RequestBody RegisterRequest request){
+    public CommonResponse<UserResponse> register(@Valid @RequestBody RegisterRequest request){
         UserResponse data = authService.register(request);
         return CommonResponse.<UserResponse>builder()
                 .timestamp(LocalDateTime.now())
