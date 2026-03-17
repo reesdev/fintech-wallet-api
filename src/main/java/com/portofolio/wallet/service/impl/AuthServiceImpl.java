@@ -80,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtService.generateToken(user.getEmail());
         LoginResponse response = new LoginResponse();
         response.setAccessToken(token);
-        log.error("Login failed: invalid password for email={}", request.getEmail());
+        log.info("Login success: email={}", request.getEmail());
         return  response;
     }
 
