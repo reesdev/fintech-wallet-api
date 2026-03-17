@@ -16,12 +16,15 @@ import com.portofolio.wallet.repository.WalletRepository;
 import com.portofolio.wallet.service.WalletService;
 import com.portofolio.wallet.util.UUID.ReferenceUtil;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class WalletServiceImpl implements WalletService {
@@ -96,7 +99,7 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public List<TransactionResponse> getMyTransactions() {
+    public Page<TransactionResponse> getMyTransactions(int page, int size) {
 
         String email = (String) SecurityContextHolder
                 .getContext()
@@ -109,15 +112,16 @@ public class WalletServiceImpl implements WalletService {
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(WalletNotFoundException::new);
 
-        List<Transaction> transactions = transactionRepository.findByWallet(wallet);
+        Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
+        Page<Transaction> transactions = transactionRepository.findByWallet(wallet,pageable);
 
-        return transactions.stream().map(tx -> {
+        return transactions.map(tx -> {
             TransactionResponse response = new TransactionResponse();
             response.setType(tx.getType());
             response.setAmount(tx.getAmount());
             response.setCreatedAt(tx.getCreatedAt());
             return response;
-        }).toList();
+        });
     }
 
     @Override

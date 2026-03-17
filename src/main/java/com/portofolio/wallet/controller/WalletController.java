@@ -5,6 +5,7 @@ import com.portofolio.wallet.dto.request.LoginRequest;
 import com.portofolio.wallet.dto.request.TransferRequest;
 import com.portofolio.wallet.dto.response.*;
 import com.portofolio.wallet.service.WalletService;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -32,9 +33,21 @@ public class WalletController {
     }
 
     @GetMapping("/transactions")
-    public CommonResponse<List<TransactionResponse>> getTransactions(){
-        List<TransactionResponse> data = walletService.getMyTransactions();
-        return CommonResponse.<List<TransactionResponse>>builder()
+    public CommonResponse<PageResponse<TransactionResponse>> getTransactions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+
+        Page<TransactionResponse> result = walletService.getMyTransactions(page, size);
+
+        PageResponse<TransactionResponse> data = PageResponse.<TransactionResponse>builder()
+                .content(result.getContent())
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .build();
+
+        return CommonResponse.<PageResponse<TransactionResponse>>builder()
                 .timestamp(LocalDateTime.now())
                 .status("SUCCESS")
                 .code("GET_TRANSACTIONS_SUCCESS")

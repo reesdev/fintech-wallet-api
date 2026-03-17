@@ -6,12 +6,14 @@ import com.portofolio.wallet.dto.response.DepositResponse;
 import com.portofolio.wallet.dto.response.TransactionResponse;
 import com.portofolio.wallet.dto.response.TransferResponse;
 import com.portofolio.wallet.dto.response.WalletResponse;
+import org.springframework.data.domain.Page;
+
 
 import java.util.List;
 
 public interface WalletService {
     WalletResponse getMyWallet();
     DepositResponse deposit(DepositRequest request);
-    List<TransactionResponse> getMyTransactions();
+    Page<TransactionResponse> getMyTransactions(int page, int size);
     TransferResponse transfer(TransferRequest transferRequest);
 }
