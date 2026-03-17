@@ -100,6 +100,9 @@ public class WalletServiceImpl implements WalletService {
     @Override
     @Transactional
     public TransferResponse transfer(TransferRequest request){
+        if (transactionRepository.existsByReferenceId(request.getReferenceId())){
+            throw new RuntimeException("Duplicate transaction referenceId");
+        }
         String email = (String) SecurityContextHolder
                 .getContext()
                 .getAuthentication()

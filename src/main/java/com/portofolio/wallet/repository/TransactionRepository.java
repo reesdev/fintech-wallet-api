@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface TransactionRepository extends JpaRepository<Transaction,Long> {
     Optional<Transaction> findByReferenceId(String referenceId);
     List<Transaction> findByWallet(Wallet wallet);
+    boolean existsByReferenceId(String referenceId);
 }
