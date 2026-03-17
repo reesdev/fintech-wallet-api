@@ -14,8 +14,10 @@ import com.portofolio.wallet.repository.TransactionRepository;
 import com.portofolio.wallet.repository.UserRepository;
 import com.portofolio.wallet.repository.WalletRepository;
 import com.portofolio.wallet.service.WalletService;
+import com.portofolio.wallet.util.ExcelUtil;
 import com.portofolio.wallet.util.UUID.ReferenceUtil;
 import jakarta.transaction.Transactional;
+import org.apache.xmlbeans.impl.xb.xsdschema.Attribute;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class WalletServiceImpl implements WalletService {
@@ -184,5 +187,19 @@ public class WalletServiceImpl implements WalletService {
         response.setBalance(senderWallet.getBalance());
 
         return response;
+    }
+    @Override
+    public byte[] exportTransactions() {
+        String email = (String) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(WalletNotFoundException::new);
+        List<Transaction> transactions = transactionRepository.findAllByWallet(wallet);
+
+        return ExcelUtil.generateTransactionExcel(transactions);
     }
 }

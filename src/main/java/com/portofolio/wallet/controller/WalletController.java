@@ -7,6 +7,7 @@ import com.portofolio.wallet.dto.response.*;
 import com.portofolio.wallet.service.WalletService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -78,5 +79,14 @@ public class WalletController {
                 .message("Transfer successful")
                 .data(data)
                 .build();
+    }
+    @GetMapping("/transactions/export")
+    public ResponseEntity<byte[]> exportTransactions(){
+        byte[] excel = walletService.exportTransactions();
+        return ResponseEntity.ok()
+                .header("Content-Disposition","attachment; filename=transactions.xlsx")
+                .header("Content-Type",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(excel);
     }
 }

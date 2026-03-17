@@ -16,4 +16,5 @@ public interface WalletService {
     DepositResponse deposit(DepositRequest request);
     Page<TransactionResponse> getMyTransactions(int page, int size);
     TransferResponse transfer(TransferRequest transferRequest);
+    byte[] exportTransactions();
 }
