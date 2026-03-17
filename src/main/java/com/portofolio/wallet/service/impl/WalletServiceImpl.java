@@ -18,6 +18,8 @@ import com.portofolio.wallet.util.ExcelUtil;
 import com.portofolio.wallet.util.UUID.ReferenceUtil;
 import jakarta.transaction.Transactional;
 import org.apache.xmlbeans.impl.xb.xsdschema.Attribute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +37,7 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
+    private static final Logger log = LoggerFactory.getLogger(WalletServiceImpl.class);
 
     public WalletServiceImpl(WalletRepository walletRepository,
                              UserRepository userRepository,
@@ -77,8 +80,9 @@ public class WalletServiceImpl implements WalletService {
 
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(WalletNotFoundException::new);
-
+        log.info("Deposit request: user={}, amount={}", email, request.getAmount());
         if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            log.info("Deposit request: user={}, amount={}", email, request.getAmount());
             throw new InvalidAmountException();
         }
 
@@ -97,7 +101,7 @@ public class WalletServiceImpl implements WalletService {
 
         DepositResponse response = new DepositResponse();
         response.setBalance(wallet.getBalance());
-
+        log.info("Deposit success: user={}, newBalance={}", email, wallet.getBalance());
         return response;
     }
 
@@ -145,8 +149,13 @@ public class WalletServiceImpl implements WalletService {
 
         User receiver = userRepository.findById(request.getReceiverId())
                 .orElseThrow(UserNotFoundException::new);
-
+        log.info("Transfer request: from={} to={} amount={} refId={}",
+                sender.getEmail(),
+                receiver.getEmail(),
+                request.getAmount(),
+                request.getReferenceId());
         if (sender.getId().equals(receiver.getId())) {
+            log.error("Transfer failed: self transfer attempt user={}", sender.getEmail());
             throw new InvalidTransferException("Cannot transfer to yourself");
         }
 
@@ -157,6 +166,10 @@ public class WalletServiceImpl implements WalletService {
                 .orElseThrow(WalletNotFoundException::new);
 
         if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
+            log.error("Transfer failed: insufficient balance user={}, balance={}, amount={}",
+                    sender.getEmail(),
+                    senderWallet.getBalance(),
+                    request.getAmount());
             throw new InsufficientBalanceException();
         }
 
@@ -185,7 +198,11 @@ public class WalletServiceImpl implements WalletService {
 
         TransferResponse response = new TransferResponse();
         response.setBalance(senderWallet.getBalance());
-
+        log.info("Transfer success: from={} to={} amount={} refId={}",
+                sender.getEmail(),
+                receiver.getEmail(),
+                request.getAmount(),
+                request.getReferenceId());
         return response;
     }
     @Override
