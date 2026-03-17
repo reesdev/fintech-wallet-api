@@ -1,33 +1,57 @@
 package com.portofolio.wallet.exception;
 
-import org.springframework.http.HttpStatus;
+import com.portofolio.wallet.dto.response.CommonResponse;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(ApiException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleApiException(ApiException ex){
-        Map<String,Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status","ERROR");
-        response.put("message", ex.getMessage());
-        return response;
+    public ResponseEntity<CommonResponse<Object>> handleApiException(ApiException ex) {
+        CommonResponse<Object> response = CommonResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status("ERROR")
+                .code("BAD_REQUEST")
+                .message(ex.getMessage())
+                .data(null)
+                .build();
+
+        return ResponseEntity.badRequest().body(response);
     }
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, Object> handleGeneralException(Exception ex){
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status","ERROR");
-        response.put("message", "Internal Server Error");
-        return response;
+    public ResponseEntity<CommonResponse<Object>> handleGeneralException(ApiException ex) {
+        CommonResponse<Object> response = CommonResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status("ERROR")
+                .code("Internal Server Error")
+                .message(ex.getMessage())
+                .data(null)
+                .build();
+        return ResponseEntity.internalServerError().body(response);
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public  ResponseEntity<CommonResponse<Object>> handleValidationException(MethodArgumentNotValidException ex){
+        String errorMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation error");
+        CommonResponse<Object> response = CommonResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status("ERROR")
+                .code("VALIDATION_ERROR")
+                .message(errorMessage)
+                .data(null)
+                .build();
+
+        return ResponseEntity.badRequest().body(response);
     }
 
 }

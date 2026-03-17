@@ -1,14 +1,16 @@
 package com.portofolio.wallet.controller;
 
 import com.portofolio.wallet.dto.request.DepositRequest;
+import com.portofolio.wallet.dto.request.LoginRequest;
 import com.portofolio.wallet.dto.request.TransferRequest;
-import com.portofolio.wallet.dto.response.DepositResponse;
-import com.portofolio.wallet.dto.response.TransactionResponse;
-import com.portofolio.wallet.dto.response.TransferResponse;
-import com.portofolio.wallet.dto.response.WalletResponse;
+import com.portofolio.wallet.dto.response.*;
 import com.portofolio.wallet.service.WalletService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -16,23 +18,75 @@ import java.util.List;
 public class WalletController {
     private final WalletService walletService;
     public WalletController(WalletService walletService){
+
         this.walletService = walletService;
     }
+
     @GetMapping
-    public WalletResponse getMyWallet(){
-        return walletService.getMyWallet();
+    public CommonResponse<WalletResponse> getWallet(){
+        WalletResponse data = walletService.getMyWallet();
+        return CommonResponse.<WalletResponse>builder()
+                .timestamp(LocalDateTime.now())
+                .status("SUCCESS")
+                .code("GET_WALLET_SUCCESS")
+                .message("Wallet retrieved successfully")
+                .data(data)
+                .build();
     }
-    @PostMapping("/deposit")
-    public DepositResponse deposit(@RequestBody DepositRequest request){
-        return walletService.deposit(request);
-    }
+
     @GetMapping("/transactions")
-    public List<TransactionResponse> getTransactions(){
-        return walletService.getMyTransactions();
+    public CommonResponse<PageResponse<TransactionResponse>> getTransactions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+
+        Page<TransactionResponse> result = walletService.getMyTransactions(page, size);
+
+        PageResponse<TransactionResponse> data = PageResponse.<TransactionResponse>builder()
+                .content(result.getContent())
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .build();
+
+        return CommonResponse.<PageResponse<TransactionResponse>>builder()
+                .timestamp(LocalDateTime.now())
+                .status("SUCCESS")
+                .code("GET_TRANSACTIONS_SUCCESS")
+                .message("Transactions retrieved successfully")
+                .data(data)
+                .build();
+    }
+
+    @PostMapping("/deposit")
+    public CommonResponse<DepositResponse> login(@Valid @RequestBody DepositRequest request){
+        DepositResponse data = walletService.deposit(request);
+        return CommonResponse.<DepositResponse>builder()
+                .timestamp(LocalDateTime.now())
+                .status("SUCCESS")
+                .code("DEPOSIT_SUCCESS")
+                .message("Deposit successful")
+                .data(data)
+                .build();
     }
     @PostMapping("/transfer")
-    public TransferResponse transfer(@RequestBody TransferRequest request){
-        System.out.println("HIT TRANSFER");
-        return walletService.transfer((request));
+    public CommonResponse<TransferResponse> login(@Valid @RequestBody TransferRequest request){
+        TransferResponse data = walletService.transfer(request);
+        return CommonResponse.<TransferResponse>builder()
+                .timestamp(LocalDateTime.now())
+                .status("SUCCESS")
+                .code("TRANSFER_SUCCESS")
+                .message("Transfer successful")
+                .data(data)
+                .build();
+    }
+    @GetMapping("/transactions/export")
+    public ResponseEntity<byte[]> exportTransactions(){
+        byte[] excel = walletService.exportTransactions();
+        return ResponseEntity.ok()
+                .header("Content-Disposition","attachment; filename=transactions.xlsx")
+                .header("Content-Type",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(excel);
     }
 }
